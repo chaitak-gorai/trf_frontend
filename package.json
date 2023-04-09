@@ -1,5 +1,5 @@
 {
-  "name": "trf_frontend",
+  "name": "twitter_reply_filter",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,9 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "autoprefixer": "^10.4.14",
+    "axios": "^1.3.5",
+    "firebase": "^9.19.1",
     "next": "13.3.0",
+    "postcss": "^8.4.21",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "react-feather": "^2.0.10",
+    "react-firebase-hooks": "^5.1.1",
+    "react-icons": "^4.8.0",
+    "tailwindcss": "^3.3.1"
   },
   "devDependencies": {
     "eslint": "8.38.0",
