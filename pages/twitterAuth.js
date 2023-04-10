@@ -11,22 +11,29 @@ import { useState } from 'react'
 const TwitterAuth = () => {
   const router = useRouter()
   const { userInfo, updateUserInfo } = useContext(UserContext)
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(false)
   const loginHandler = async () => {
     try {
       setLoading(true)
       const result = await signInWithPopup(auth, provider)
       const user = result.user
-      console.log(user.uid)
+      const credential = TwitterAuthProvider.credentialFromResult(result)
+      const token = credential.accessToken
+      const secret = credential.secret
+      console.log(token)
+      console.log(secret)
+      console.log(user)
       //axios call to backend
 
       const loginResponse = await axios.post(
-        'http://localhost:3005/user/login',
+        'https://trf.herokuapp.com/user/login',
         {
           userName: user.reloadUserInfo.screenName,
           uid: user.uid,
           name: user.reloadUserInfo.displayName,
-          accessToken: user.accessToken,
+          accessToken: token,
+          tokenSecret: secret,
           profilePic: user.reloadUserInfo.photoUrl,
         },
         {
@@ -38,14 +45,17 @@ const TwitterAuth = () => {
       if (loginResponse.status === 200 || loginResponse.status === 201) {
         console.log('Login Success')
         const userData = loginResponse.data
-        updateUserInfo({
+        const userI = {
           name: userData.name,
           userName: userData.userName,
           profilePic: userData.profilePic,
           uid: userData.uid,
           accessToken: userData.accessToken,
-        })
-        if (userData.accessToken != '') {
+        }
+        localStorage.setItem('user', JSON.stringify(userI))
+        setUser(userI)
+        console.log(userI)
+        if (user.accessToken != '') {
           setLoading(false)
           router.push('/profile')
         }
@@ -61,7 +71,8 @@ const TwitterAuth = () => {
   }
 
   useEffect(() => {
-    if (userInfo.accessToken) {
+    const user = JSON.parse(localStorage.getItem('user'))
+    if (user) {
       router.push('/profile')
     }
   }, [userInfo, router])

@@ -11,14 +11,19 @@ import { useState } from 'react'
 const Profile = () => {
   const { userInfo, updateUserInfo } = useContext(UserContext)
   const [loading, setLoading] = useState(false)
-  const user = userInfo
+  const [user, setUser] = useState()
   const router = useRouter()
-  console.log(user)
+
   useEffect(() => {
-    if (!user.name) {
+    const userDetails = JSON.parse(localStorage.getItem('user'))
+
+    if (!userDetails) {
       router.push('/')
+    } else {
+      setUser(userDetails)
+      console.log(user)
     }
-  }, [user, router])
+  }, [])
 
   const [tweet, setTweet] = useState({
     tweet: '',
@@ -38,23 +43,27 @@ const Profile = () => {
   const [currentTweetIndex, setCurrentTweetIndex] = useState(1)
   const fetchLastTweets = async () => {
     setLoading(true)
-    const response = await fetch(
-      `http://localhost:3005/user/tweet/${user.userName}/${currentTweetIndex}`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-    setLoading(false)
-    const data = await response.json()
-    if (data.success == true) {
+    if (user?.userName != undefined) {
+      const response = await fetch(
+        `https://trf.herokuapp.com/user/tweet/${user?.userName}/${currentTweetIndex}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+
+      const data = await response.json()
       console.log(data)
-      setTweet(data.tweet)
-      setReplies(data.reply)
-    } else {
-      alert('Invalid Index')
+      if (data.success == true) {
+        console.log(data)
+        setTweet(data.tweet)
+        setReplies(data.reply)
+      } else {
+        alert('Invalid Index')
+      }
     }
+    setLoading(false)
   }
 
   const prevTweetHandler = () => {
@@ -65,9 +74,16 @@ const Profile = () => {
   const nextTweetHandler = () => {
     setCurrentTweetIndex(currentTweetIndex + 1)
   }
+  const logoutHandler = () => {
+    localStorage.removeItem('user')
+    updateUserInfo(null)
+    router.push('/')
+  }
   useEffect(() => {
-    fetchLastTweets()
-  }, [currentTweetIndex])
+    if (user?.accessToken != '') {
+      fetchLastTweets()
+    }
+  }, [currentTweetIndex, user])
   return (
     <div className='min-h-screen bg-gray-100'>
       <header className='bg-white border-b border-gray-200'>
@@ -85,14 +101,24 @@ const Profile = () => {
               </div>
             </div>
             <div className='md:flex items-center justify-end md:flex-1 lg:w-0'>
-              <span className='text-gray-600'>{user?.name}</span>
-              <Image
-                className='h-8 w-8 rounded-full ml-3'
-                src={user?.profilePic}
-                alt='Profile Picture'
-                width={32}
-                height={32}
-              />
+              <button
+                className='px-4 py-2 mr-5 font-semibold rounded-lg bg-blue-500 hover:bg-blue-600 text-white'
+                onClick={logoutHandler}
+              >
+                Logout
+              </button>
+              {user && (
+                <>
+                  <span className='text-gray-600'>{user?.name}</span>
+                  <Image
+                    className='h-8 w-8 rounded-full ml-3'
+                    src={user?.profilePic}
+                    alt='Profile Picture'
+                    width={32}
+                    height={32}
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -146,12 +172,12 @@ const Profile = () => {
                 ) : (
                   <button
                     className={`px-4 py-2 font-semibold rounded-lg ${
-                      currentTweetIndex === 5
+                      currentTweetIndex === 10
                         ? 'bg-gray-300 cursor-not-allowed'
                         : 'bg-blue-500 hover:bg-blue-600 text-white'
                     }`}
                     onClick={nextTweetHandler}
-                    disabled={currentTweetIndex === 5}
+                    disabled={currentTweetIndex === 10}
                   >
                     Next Tweet
                   </button>
